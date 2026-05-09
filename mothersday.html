@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>母亲节快乐</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  width: 100%; height: 100%; overflow: hidden;
+  background: #1a1a2e;
+  font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: #fff;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+#app { width: 100%; height: 100%; position: relative; overflow: hidden;
+  background: linear-gradient(135deg, #1a1a2e 0%, #2d1b3d 50%, #1a1a2e 100%);
+}
+
+/* Stage 1: Pulsing Heart */
+#stage1 {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 10;
+  transition: opacity 0.6s;
+}
+#stage1.fade-out { opacity: 0; pointer-events: none; transition: opacity 1s; }
+
+.ambient-particles { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.ap {
+  position: absolute;
+  border-radius: 50%;
+  animation: floatUp linear infinite;
+  opacity: 0;
+}
+@keyframes floatUp {
+  0% { transform: translateY(0) scale(0); opacity: 0; }
+  20% { opacity: 0.6; }
+  80% { opacity: 0.4; }
+  100% { transform: translateY(-100vh) scale(1); opacity: 0; }
+}
+
+/* Star sparkles */
+.star {
+  position: absolute;
+  border-radius: 50%;
+  animation: twinkle 3s ease-in-out infinite;
+}
+@keyframes twinkle {
+  0%, 100% { opacity: 0; transform: scale(0.3); }
+  50% { opacity: 0.8; transform: scale(1); }
+}
+@keyframes twinkle2 {
+  0%, 100% { opacity: 0.2; transform: scale(0.5); }
+  30% { opacity: 0.9; transform: scale(1.2); }
+  70% { opacity: 0.1; transform: scale(0.4); }
+}
+
+/* Petal background layer */
+#petal-layer {
+  position: absolute; inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+.petal {
+  position: absolute;
+  top: -5vh;
+  border-radius: 50% 0 50% 0;
+  opacity: 0;
+}
+@keyframes petalFall1 {
+  0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0; }
+  10% { opacity: 0.6; }
+  50% { transform: translateY(50vh) translateX(40px) rotate(180deg); }
+  100% { transform: translateY(110vh) translateX(-30px) rotate(360deg); opacity: 0; }
+}
+@keyframes petalFall2 {
+  0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0; }
+  10% { opacity: 0.6; }
+  50% { transform: translateY(50vh) translateX(-35px) rotate(240deg); }
+  100% { transform: translateY(110vh) translateX(25px) rotate(480deg); opacity: 0; }
+}
+@keyframes petalFall3 {
+  0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0; }
+  10% { opacity: 0.6; }
+  50% { transform: translateY(50vh) translateX(50px) rotate(120deg); }
+  100% { transform: translateY(110vh) translateX(-40px) rotate(300deg); opacity: 0; }
+}
+@keyframes petalFall4 {
+  0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0; }
+  10% { opacity: 0.6; }
+  50% { transform: translateY(50vh) translateX(-20px) rotate(300deg); }
+  100% { transform: translateY(110vh) translateX(35px) rotate(540deg); opacity: 0; }
+}
+
+.heart-wrapper {
+  position: relative;
+  cursor: pointer;
+  z-index: 2;
+  text-align: center;
+}
+.big-heart {
+  font-size: 28vmin;
+  display: inline-block;
+  cursor: pointer;
+  filter: drop-shadow(0 0 30px rgba(233,30,99,0.5))
+          drop-shadow(0 0 60px rgba(233,30,99,0.3));
+  transition: transform 0.3s;
+  animation: heartPulse 1.5s ease-in-out infinite;
+}
+.big-heart:active { transform: scale(1.3); }
+@keyframes heartPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.12); }
+}
+.stage1-hint {
+  margin-top: 3vmin;
+  font-size: 2.4vmin;
+  color: rgba(255,255,255,0.7);
+  letter-spacing: 2px;
+  animation: hintBlink 2s ease-in-out infinite;
+}
+@keyframes hintBlink {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+/* Canvas (Stage 2) */
+#particle-canvas {
+  position: absolute; inset: 0;
+  z-index: 15;
+  display: none;
+}
+
+/* Stage 3+4: Cards */
+#card-stage {
+  position: absolute; inset: 0;
+  z-index: 20;
+  display: none;
+  align-items: center; justify-content: center;
+}
+.blessing-card {
+  position: absolute;
+  padding: 8px 14px;
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(255,128,171,0.25);
+  border-radius: 8px;
+  font-size: clamp(10px, 1.6vmin, 18px);
+  color: #ff80ab;
+  white-space: nowrap;
+  transition: all 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  opacity: 0;
+  pointer-events: none;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+}
+.blessing-card.show { opacity: 1; }
+.blessing-card.fade-out {
+  opacity: 0 !important;
+  transform: scale(0.8) !important;
+  transition: opacity 0.4s, transform 0.4s !important;
+}
+
+/* Stage 5: Options */
+#stage5 {
+  position: absolute; inset: 0;
+  z-index: 30;
+  display: none;
+  flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 20px;
+}
+#stage5.active { display: flex; }
+
+.st5-title {
+  font-size: clamp(18px, 3vmin, 32px);
+  color: #ff80ab;
+  margin-bottom: 4vmin;
+  text-align: center;
+}
+.option-list {
+  display: flex; flex-direction: column; gap: 12px;
+  width: min(320px, 85vw);
+}
+.option-btn {
+  padding: 14px 20px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,128,171,0.2);
+  border-radius: 12px;
+  color: #eee;
+  font-size: clamp(14px, 2vmin, 18px);
+  cursor: pointer;
+  transition: all 0.3s;
+  text-align: left;
+  display: flex; align-items: center; gap: 10px;
+}
+.option-btn:hover { background: rgba(255,128,171,0.12); border-color: rgba(255,128,171,0.4); }
+.option-btn:active { transform: scale(0.97); }
+.option-btn .icon { font-size: 1.3em; }
+.option-btn.selected {
+  background: rgba(233,30,99,0.2);
+  border-color: #e91e63;
+  pointer-events: none;
+}
+
+.feedback-box {
+  margin-top: 20px;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.5s;
+  min-height: 100px;
+}
+.feedback-box.show { opacity: 1; }
+.feedback-text {
+  font-size: clamp(16px, 2.8vmin, 28px);
+  color: #ff80ab;
+  margin-bottom: 20px;
+}
+.cont-btn {
+  padding: 10px 28px;
+  background: linear-gradient(135deg, #e91e63, #f06292);
+  border: none;
+  border-radius: 20px;
+  color: #fff;
+  font-size: clamp(14px, 2vmin, 18px);
+  cursor: pointer;
+  transition: all 0.3s;
+  opacity: 0;
+  transform: translateY(10px);
+}
+.cont-btn.show { opacity: 1; transform: translateY(0); }
+.cont-btn:active { transform: scale(0.95); }
+
+.cont-hint {
+  color: rgba(255,255,255,0.5);
+  font-size: 14px;
+  margin-top: 20px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+.cont-hint.show { opacity: 1; }
+
+/* Final message */
+.final-msg {
+  position: absolute; inset: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 40;
+}
+.final-msg.active { display: flex; }
+.final-msg p {
+  text-align: center;
+  opacity: 0;
+  animation: fadeInUp 0.8s ease forwards;
+}
+.final-msg .line1 {
+  font-size: clamp(24px, 4vmin, 48px);
+  color: #ff80ab;
+  animation-delay: 0.5s;
+}
+.final-msg .line2 {
+  font-size: clamp(28px, 5vmin, 56px);
+  color: #f06292;
+  font-weight: 700;
+  margin-top: 10px;
+  animation-delay: 1.5s;
+}
+.final-msg .deco {
+  margin-top: 20px;
+  font-size: clamp(24px, 4vmin, 40px);
+  animation-delay: 2.8s;
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Heart gathering canvas */
+#heart-gather-canvas {
+  position: absolute; inset: 0;
+  z-index: 45;
+  display: none;
+}
+
+/* Signature screen */
+.signature-screen {
+  position: absolute; inset: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 50;
+}
+.signature-screen.active { display: flex; }
+.sig-line {
+  text-align: center;
+  opacity: 0;
+  animation: fadeInUp 0.8s ease forwards;
+}
+.sig-line.line1 {
+  font-size: clamp(16px, 2.5vmin, 28px);
+  color: rgba(255,128,171,0.75);
+  animation-delay: 0.3s;
+}
+.sig-line.line2 {
+  font-size: clamp(18px, 3vmin, 34px);
+  color: #f06292;
+  font-weight: 600;
+  margin-top: 8px;
+  animation-delay: 0.8s;
+}
+.replay-btn {
+  margin-top: 30px;
+  padding: 12px 32px;
+  background: linear-gradient(135deg, #e91e63, #f06292);
+  border: none;
+  border-radius: 24px;
+  color: #fff;
+  font-size: clamp(14px, 2vmin, 18px);
+  cursor: pointer;
+  opacity: 0;
+  animation: fadeInUp 0.8s ease forwards;
+  animation-delay: 1.4s;
+  transition: transform 0.2s;
+}
+.replay-btn:hover { transform: scale(1.05); }
+.replay-btn:active { transform: scale(0.95); }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- Background Music -->
+  <audio id="bgm" src="bgm.mp4" loop preload="auto"></audio>
+
+  <!-- Stage 1: Heart -->
+  <div id="petal-layer"></div>
+  <div id="stage1">
+    <div class="ambient-particles" id="ambientParticles"></div>
+    <div class="heart-wrapper" id="heartWrapper">
+      <div class="big-heart" id="bigHeart">❤️</div>
+      <div class="stage1-hint">妈妈，请点击这颗心 ❤️</div>
+    </div>
+  </div>
+
+  <!-- Stage 2: Canvas -->
+  <canvas id="particle-canvas"></canvas>
+
+  <!-- Stage 3+4: Cards -->
+  <div id="card-stage"></div>
+
+  <!-- Stage 5: Options -->
+  <div id="stage5">
+    <div class="st5-title">请选择一项礼物 🎁</div>
+    <div class="option-list" id="optionList"></div>
+    <div class="feedback-box" id="feedbackBox">
+      <div class="feedback-text" id="feedbackText"></div>
+      <button class="cont-btn" id="contBtn1">继续</button>
+    </div>
+  </div>
+
+  <!-- Final Message -->
+  <div class="final-msg" id="finalMsg">
+    <p class="line1">妈妈辛苦了</p>
+    <p class="line2">母亲节快乐</p>
+    <p class="deco">🌷🌷🌷</p>
+  </div>
+
+  <!-- Heart Gathering Canvas -->
+  <canvas id="heart-gather-canvas"></canvas>
+
+  <!-- Signature Screen -->
+  <div class="signature-screen" id="signatureScreen">
+    <p class="sig-line line1">—— 永远爱你的hzh</p>
+    <p class="sig-line line2">2026.05.10</p>
+    <button class="replay-btn" id="replayBtn" onclick="location.reload()">再看一次</button>
+  </div>
+
+</div>
+
+<script>
+// ─── Data ───
+const BLESSINGS = ["谢谢你一直以来的包容", "永远爱你", "你辛苦了", "家最温暖", "最美妈妈", "每一天都要开心", "你是我最大的幸运", "感恩有你", "温柔如你", "时间慢一点", "健康平安", "最好的遇见", "有你真好", "笑声常在", "岁月不败美人", "万事顺遂", "温暖前行", "如花绽放", "来日方长", "笑容常在", "岁月温柔", "眼中永远有光", "爱你三千遍"];
+const OPTIONS = [{"icon": "🎁", "label": "精美礼物一份", "feedback": "礼物在路上 😉"}, {"icon": "🍳", "label": "一顿亲手做的饭", "feedback": "暑假再实现 😊"}, {"icon": "✈️", "label": "一次说走就走的旅行", "feedback": "暑假再实现 😊"}, {"icon": "☀️", "label": "一整天的专属陪伴", "feedback": "暑假再实现 😊"}];
+
+// ─── State ───
+let state = 'idle';
+let selectedOption = null;
+let particles = [];
+let animFrame = null;
+let cardElements = [];
+
+const stage1 = document.getElementById('stage1');
+const heart = document.getElementById('bigHeart');
+const canvas = document.getElementById('particle-canvas');
+const ctx = canvas.getContext('2d');
+const cardStage = document.getElementById('card-stage');
+const stage5 = document.getElementById('stage5');
+const optionList = document.getElementById('optionList');
+const feedbackBox = document.getElementById('feedbackBox');
+const feedbackText = document.getElementById('feedbackText');
+const contBtn1 = document.getElementById('contBtn1');
+const finalMsg = document.getElementById('finalMsg');
+
+// ─── Resize ───
+function resizeCanvas() {
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = window.innerWidth * dpr;
+  canvas.height = window.innerHeight * dpr;
+  canvas.style.width = window.innerWidth + 'px';
+  canvas.style.height = window.innerHeight + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+// ─── Ambient particles ───
+(function initAmbient() {
+  const container = document.getElementById('ambientParticles');
+  const colors = ['#e91e63','#f06292','#ff80ab','#ffd54f','#ce93d8'];
+  for (let i = 0; i < 25; i++) {
+    const el = document.createElement('div');
+    el.className = 'ap';
+    const size = 2 + Math.random() * 5;
+    el.style.cssText = [
+      'width:' + size + 'px; height:' + size + 'px;',
+      'left:' + (Math.random()*100) + '%;',
+      'top:' + (60 + Math.random()*40) + '%;',
+      'background:' + colors[i % colors.length] + ';',
+      'animation-duration:' + (8+Math.random()*12) + 's;',
+      'animation-delay:' + (Math.random()*10) + 's;',
+    ].join(' ');
+    container.appendChild(el);
+  }
+})();
+
+// ─── Falling petals ───
+(function initPetals() {
+  var container = document.getElementById('petal-layer');
+  var petalColors = ['#e91e63','#f06292','#ff80ab','#ce93d8','#ec407a'];
+  var animNames = ['petalFall1','petalFall2','petalFall3','petalFall4'];
+  for (var i = 0; i < 45; i++) {
+    var el = document.createElement('div');
+    el.className = 'petal';
+    var size = 3 + Math.random() * 16;
+    var w = size;
+    var h = size * (0.5 + Math.random() * 0.5);
+    var rot = Math.random() * 360;
+    el.style.cssText = [
+      'left:' + (Math.random() * 100) + '%;',
+      'width:' + w + 'px; height:' + h + 'px;',
+      'background:' + petalColors[i % petalColors.length] + ';',
+      'animation:' + animNames[i % animNames.length] + ' ' + (12 + Math.random() * 10) + 's linear infinite;',
+      'animation-delay:' + (Math.random() * 15) + 's;',
+      'transform:rotate(' + rot + 'deg);',
+      'border-radius:' + (40 + Math.random() * 30) + '% ' + (10 + Math.random() * 20) + '% ' + (50 + Math.random() * 30) + '% ' + (10 + Math.random() * 20) + '%;',
+    ].join(' ');
+    container.appendChild(el);
+  }
+
+  // Twinkling stars
+  var starColors = ['#fff','#ffd54f','#ff80ab','#ce93d8','#f8bbd0'];
+  for (var j = 0; j < 35; j++) {
+    var s = document.createElement('div');
+    s.className = 'star';
+    var ss = 1.5 + Math.random() * 4;
+    s.style.cssText = [
+      'left:' + (Math.random() * 100) + '%;',
+      'top:' + (Math.random() * 100) + '%;',
+      'width:' + ss + 'px; height:' + ss + 'px;',
+      'background:' + starColors[j % starColors.length] + ';',
+      'box-shadow: 0 0 ' + (ss*3) + 'px ' + (ss) + 'px ' + starColors[j % starColors.length] + ';',
+      'animation:' + (j % 2 === 0 ? 'twinkle' : 'twinkle2') + ' ' + (2 + Math.random() * 4) + 's ease-in-out infinite;',
+      'animation-delay:' + (Math.random() * 4) + 's;',
+    ].join(' ');
+    container.appendChild(s);
+  }
+})();
+
+// ─── Stage 2: Particle Burst ───
+function createBurstParticles(cx, cy) {
+  particles = [];
+  const colors = ['#e91e63','#f06292','#ff80ab','#ffd54f','#ce93d8','#ff4081'];
+  for (let i = 0; i < 150; i++) {
+    const angle = Math.random() * 2 * Math.PI;
+    const speed = 3 + Math.random() * 12;
+    particles.push({
+      x: cx, y: cy,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 4,
+      size: 3 + Math.random() * 10,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      life: 1,
+      gravity: 0.06 + Math.random() * 0.04,
+      friction: 0.97 + Math.random() * 0.02,
+    });
+  }
+}
+
+function animateParticles() {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  ctx.clearRect(0, 0, w, h);
+  let alive = false;
+  for (const p of particles) {
+    if (p.life <= 0) continue;
+    alive = true;
+    p.vx *= p.friction;
+    p.vy *= p.friction;
+    p.vy += p.gravity;
+    p.x += p.vx;
+    p.y += p.vy;
+    p.life -= 0.005;
+    const alpha = Math.max(0, p.life * 0.9);
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = p.color;
+    const s = p.size * Math.max(0, p.life);
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, Math.max(1, s), 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  if (alive) {
+    animFrame = requestAnimationFrame(animateParticles);
+  } else {
+    particles = [];
+    canvas.style.display = 'none';
+    showCardStage();
+  }
+}
+
+function triggerBurst() {
+  if (state !== 'idle') return;
+  state = 'burst';
+
+  // Start background music on first interaction
+  var bgm = document.getElementById('bgm');
+  if (bgm && bgm.paused) {
+    bgm.volume = 0.3;
+    bgm.play().catch(function() {});
+  }
+
+  stage1.classList.add('fade-out');
+  canvas.style.display = 'block';
+  resizeCanvas();
+  const cx = window.innerWidth / 2;
+  const cy = window.innerHeight / 2;
+  createBurstParticles(cx, cy);
+  if (animFrame) cancelAnimationFrame(animFrame);
+  animateParticles();
+}
+
+// ─── Stage 3: Heart Cards ───
+function getHeartPoints(count) {
+  const pts = [];
+  for (let i = 0; i < count; i++) {
+    const t = (i / count) * 2 * Math.PI;
+    const st = Math.sin(t);
+    const x = 16 * st * st * st;
+    const y = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
+    pts.push({ x, y });
+  }
+  return pts;
+}
+
+function showCardStage() {
+  state = 'cards';
+  cardStage.innerHTML = '';
+  cardStage.style.display = 'flex';
+  cardElements = [];
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  const scale = Math.min(w, h) * 0.017;
+  const cx = w / 2;
+  const cy = h / 2 + 10;
+  const totalCards = 45;
+  const hPts = getHeartPoints(totalCards);
+
+  for (let i = 0; i < totalCards; i++) {
+    const card = document.createElement('div');
+    card.className = 'blessing-card';
+    const tx = hPts[i].x * scale + cx;
+    const ty = hPts[i].y * scale + cy;
+    const rot = (Math.random() - 0.5) * 24;
+    const sizeFactor = 0.7 + Math.random() * 0.6;
+
+    // Random starting position off-screen
+    const side = Math.floor(Math.random() * 4);
+    let sx, sy;
+    if (side === 0) { sx = -200 - Math.random() * 200; sy = Math.random() * h; }
+    else if (side === 1) { sx = w + 200 + Math.random() * 200; sy = Math.random() * h; }
+    else if (side === 2) { sx = Math.random() * w; sy = -200 - Math.random() * 200; }
+    else { sx = Math.random() * w; sy = h + 200 + Math.random() * 200; }
+
+    card.textContent = BLESSINGS[i % BLESSINGS.length];
+    card.style.cssText = [
+      'left:' + sx + 'px; top:' + sy + 'px;',
+      'transform: rotate(' + ((Math.random()-0.5)*30) + 'deg) scale(' + sizeFactor + ');',
+      'z-index:' + Math.floor(Math.random() * 50) + ';',
+      'opacity:0;',
+      'font-size: clamp(9px, ' + (1.2 * sizeFactor) + 'vmin, 16px);',
+      'padding:' + (4 + 4 * sizeFactor) + 'px ' + (8 + 6 * sizeFactor) + 'px;',
+      'border-color: hsla(' + (340 + Math.random()*20) + ', 80%, ' + (65 + Math.random()*20) + '%, 0.3);',
+    ].join(' ');
+    card.dataset.tx = tx;
+    card.dataset.ty = ty;
+    card.dataset.rot = rot;
+    card.dataset.idx = i;
+    cardStage.appendChild(card);
+    cardElements.push(card);
+  }
+
+  // Fly-in animation
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      for (var i = 0; i < cardElements.length; i++) {
+        (function(idx) {
+          var c = cardElements[idx];
+          var tx = parseFloat(c.dataset.tx);
+          var ty = parseFloat(c.dataset.ty);
+          var rot = parseFloat(c.dataset.rot);
+          var tDelay = (idx / cardElements.length) * 1800;
+          c.style.transition = 'all ' + (1.2 + Math.random()*0.6) + 's cubic-bezier(0.34, 1.56, 0.64, 1)';
+          c.style.transitionDelay = tDelay + 'ms';
+          c.style.left = tx + 'px';
+          c.style.top = ty + 'px';
+          c.style.transform = 'rotate(' + rot + 'deg) scale(' + (0.7 + Math.random()*0.6) + ')';
+          c.style.opacity = '1';
+          c.classList.add('show');
+        })(i);
+      }
+
+      // Hint appears after all cards formed, waiting for click
+      var flyTime = 4500;
+      setTimeout(function() {
+        state = 'cards_ready';
+        var hint = document.createElement('div');
+        hint.id = 'cardContinueHint';
+        hint.style.cssText = [
+          'position:absolute; bottom:10vmin; left:0; width:100%;',
+          'text-align:center;',
+          'color:rgba(255,128,171,0.7);',
+          'font-size:clamp(14px,2.2vmin,22px);',
+          'letter-spacing:2px;',
+          'cursor:pointer;',
+          'z-index:999;',
+          'animation:hintBlink 2s ease-in-out infinite;',
+          'text-shadow:0 0 20px rgba(233,30,99,0.3);',
+        ].join('');
+        hint.textContent = '✨ 点击继续 ✨';
+        hint.addEventListener('click', function() {
+          if (state === 'cards_ready') reverseFadeCards();
+        });
+        cardStage.appendChild(hint);
+      }, flyTime);
+    });
+  });
+}
+
+// ─── Stage 4: Reverse Fade ───
+function reverseFadeCards() {
+  state = 'fading';
+  var reversed = cardElements.slice().reverse();
+  var delay = 800;
+
+  for (var i = 0; i < reversed.length; i++) {
+    (function(idx) {
+      setTimeout(function() {
+        reversed[idx].style.transition = 'opacity 0.4s, transform 0.4s';
+        reversed[idx].classList.add('fade-out');
+        reversed[idx].style.opacity = '0';
+        reversed[idx].style.transform += ' scale(0.6)';
+      }, delay);
+    })(i);
+    delay += 100;
+  }
+
+  setTimeout(function() {
+    cardStage.style.display = 'none';
+    showOptions();
+  }, delay + 400);
+}
+
+// ─── Stage 5: Options ───
+function showOptions() {
+  state = 'options';
+  selectedOption = null;
+  optionList.innerHTML = '';
+  feedbackBox.classList.remove('show');
+  contBtn1.classList.remove('show');
+  stage5.classList.add('active');
+
+  for (var i = 0; i < OPTIONS.length; i++) {
+    (function(idx) {
+      var opt = OPTIONS[idx];
+      var btn = document.createElement('div');
+      btn.className = 'option-btn';
+      btn.innerHTML = '<span class="icon">' + opt.icon + '</span>' + opt.label;
+      btn.dataset.feedback = opt.feedback;
+      btn.addEventListener('click', function() { handleOptionClick(this); });
+      optionList.appendChild(btn);
+    })(i);
+  }
+}
+
+function handleOptionClick(btn) {
+  if (selectedOption) return;
+  selectedOption = btn;
+  state = 'feedback';
+  btn.classList.add('selected');
+
+  var allBtns = document.querySelectorAll('.option-btn');
+  for (var i = 0; i < allBtns.length; i++) {
+    if (allBtns[i] !== btn) allBtns[i].style.opacity = '0.3';
+  }
+
+  feedbackText.textContent = btn.dataset.feedback;
+  feedbackBox.classList.add('show');
+  setTimeout(function() { contBtn1.classList.add('show'); }, 1000);
+}
+
+// Continue button 1
+contBtn1.addEventListener('click', function() {
+  state = 'allwant';
+  feedbackText.textContent = '小孩子才做选择，我全都要 😎';
+  contBtn1.classList.remove('show');
+
+  var allBtns = document.querySelectorAll('.option-btn');
+  for (var i = 0; i < allBtns.length; i++) {
+    allBtns[i].style.display = 'none';
+  }
+
+  setTimeout(function() {
+    var hint = document.createElement('div');
+    hint.className = 'cont-hint';
+    hint.textContent = '点击继续';
+    hint.addEventListener('click', function() {
+      state = 'final';
+      stage5.classList.remove('active');
+      finalMsg.classList.add('active');
+      // After 4s reading time, start heart gathering
+      setTimeout(startHeartGathering, 4000);
+    });
+    feedbackBox.appendChild(hint);
+    setTimeout(function() { hint.classList.add('show'); }, 100);
+  }, 1500);
+});
+
+// ─── Heart Gathering ───
+var hgCanvas, hgCtx, hgParticles, hgPhase, hgAlpha, hgTimer, hgAnimId;
+var hgStartPos = [];
+
+function startHeartGathering() {
+  finalMsg.classList.remove('active');
+  hgCanvas = document.getElementById('heart-gather-canvas');
+  hgCtx = hgCanvas.getContext('2d');
+
+  var dpr = window.devicePixelRatio || 1;
+  hgCanvas.width = window.innerWidth * dpr;
+  hgCanvas.height = window.innerHeight * dpr;
+  hgCanvas.style.width = window.innerWidth + 'px';
+  hgCanvas.style.height = window.innerHeight + 'px';
+  hgCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  hgCanvas.style.display = 'block';
+
+  var w = window.innerWidth;
+  var h = window.innerHeight;
+  var cx = w / 2;
+  var cy = h / 2 + 10;
+  var scale = Math.min(w, h) * 0.016;
+  var particleCount = 150;
+
+  hgParticles = [];
+  hgStartPos = [];
+  hgPhase = 'gather';
+  hgAlpha = 1;
+  hgTimer = 0;
+
+  // Precompute heart target positions (hollow outline)
+  var targets = [];
+  for (var i = 0; i < particleCount; i++) {
+    var t = (i / particleCount) * 2 * Math.PI;
+    var st = Math.sin(t);
+    var hx = 16 * st * st * st * scale + cx;
+    var hy = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t)) * scale + cy;
+    var jitterX = (Math.random() - 0.5) * 12;
+    var jitterY = (Math.random() - 0.5) * 12;
+    targets.push({ x: hx + jitterX, y: hy + jitterY });
+  }
+
+  var colors = ['#e91e63','#f06292','#ff80ab','#ffd54f','#ce93d8','#ff4081','#ffab40','#ff6e40','#ea80fc'];
+  for (var i = 0; i < particleCount; i++) {
+    var sx = Math.random() * w;
+    var sy = Math.random() * h;
+    hgParticles.push({
+      sx: sx, sy: sy,
+      x: sx, y: sy,
+      tx: targets[i].x, ty: targets[i].y,
+      size: 2 + Math.random() * 8,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      progress: 0,
+      speed: 0.004 + Math.random() * 0.014,
+    });
+  }
+
+  animateHeartGathering();
+}
+
+function animateHeartGathering() {
+  var w = window.innerWidth;
+  var h = window.innerHeight;
+  hgCtx.clearRect(0, 0, w, h);
+
+  var allGathered = true;
+
+  for (var i = 0; i < hgParticles.length; i++) {
+    var p = hgParticles[i];
+
+    if (hgPhase === 'gather' && p.progress < 1) {
+      allGathered = false;
+      p.progress += p.speed;
+      var e = 1 - Math.pow(1 - Math.min(1, p.progress), 3);
+      p.x = p.sx + (p.tx - p.sx) * e;
+      p.y = p.sy + (p.ty - p.sy) * e;
+    } else if (hgPhase === 'hold') {
+      allGathered = false;
+    }
+
+    hgCtx.globalAlpha = hgAlpha;
+    hgCtx.fillStyle = p.color;
+    var glowSize = hgPhase === 'burst' ? 16 : 8;
+    hgCtx.shadowBlur = glowSize;
+    hgCtx.shadowColor = p.color;
+    hgCtx.beginPath();
+    hgCtx.arc(p.x, p.y, Math.max(1, p.size), 0, Math.PI * 2);
+    hgCtx.fill();
+    // Extra bright center dot for fireworks
+    if (hgPhase === 'burst') {
+      hgCtx.shadowBlur = 0;
+      hgCtx.globalAlpha = hgAlpha * 0.8;
+      hgCtx.fillStyle = '#fff';
+      hgCtx.beginPath();
+      hgCtx.arc(p.x, p.y, Math.max(0.5, p.size * 0.3), 0, Math.PI * 2);
+      hgCtx.fill();
+    }
+    hgCtx.shadowBlur = 0;
+  }
+
+  hgCtx.globalAlpha = 1;
+
+  if (hgPhase === 'gather' && allGathered) {
+    hgPhase = 'hold';
+    hgTimer = 0;
+  }
+
+  if (hgPhase === 'hold') {
+    hgTimer++;
+    if (hgTimer > 120) { // ~2 seconds hold
+      // Burst: give each particle an strong outward velocity
+      for (var j = 0; j < hgParticles.length; j++) {
+        var bp = hgParticles[j];
+        var angle = Math.atan2(bp.y - (window.innerHeight/2 + 10), bp.x - window.innerWidth/2);
+        // Shoot outward from heart center with wide spread
+        angle += (Math.random() - 0.5) * 1.2;
+        var spd = 5 + Math.random() * 18;
+        bp.vx = Math.cos(angle) * spd;
+        bp.vy = Math.sin(angle) * spd;
+        // Bigger glow during burst
+        bp.size *= 1.5;
+      }
+      hgPhase = 'burst';
+      hgTimer = 0;
+      hgAlpha = 1;
+    }
+  }
+
+  if (hgPhase === 'burst') {
+    hgTimer++;
+    // Animate explosion with strong visual
+    for (var j = 0; j < hgParticles.length; j++) {
+      var bp = hgParticles[j];
+      bp.vx *= 0.985;
+      bp.vy *= 0.985;
+      bp.vy += 0.08; // gravity
+      bp.x += bp.vx;
+      bp.y += bp.vy;
+      // Flash particles bigger during burst
+      bp.size = Math.max(bp.size, bp.size * 1.02);
+    }
+    // First 50 frames: full brightness with glow
+    // Then fade
+    if (hgTimer > 55) {
+      hgAlpha -= 0.015;
+    }
+    if (hgAlpha <= 0) {
+      hgCanvas.style.display = 'none';
+      document.getElementById('signatureScreen').classList.add('active');
+      return;
+    }
+  }
+
+  if (hgPhase === 'fade') {
+    hgAlpha -= 0.02;
+    if (hgAlpha <= 0) {
+      hgCanvas.style.display = 'none';
+      document.getElementById('signatureScreen').classList.add('active');
+      return;
+    }
+  }
+
+  hgAnimId = requestAnimationFrame(animateHeartGathering);
+}
+
+// ─── Trigger ───
+heart.addEventListener('click', triggerBurst);
+heart.addEventListener('touchend', function(e) { e.preventDefault(); triggerBurst(); });
+</script>
+</body>
+</html>
