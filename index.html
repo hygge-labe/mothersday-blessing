@@ -589,18 +589,19 @@ function showCardStage() {
     const rot = (Math.random() - 0.5) * 24;
     const sizeFactor = 0.7 + Math.random() * 0.6;
 
-    // Random starting position off-screen
+    // Random starting position off-screen (pushed further to account for centering)
     const side = Math.floor(Math.random() * 4);
     let sx, sy;
-    if (side === 0) { sx = -200 - Math.random() * 200; sy = Math.random() * h; }
-    else if (side === 1) { sx = w + 200 + Math.random() * 200; sy = Math.random() * h; }
-    else if (side === 2) { sx = Math.random() * w; sy = -200 - Math.random() * 200; }
-    else { sx = Math.random() * w; sy = h + 200 + Math.random() * 200; }
+    if (side === 0) { sx = -400 - Math.random() * 300; sy = Math.random() * h; }
+    else if (side === 1) { sx = w + 400 + Math.random() * 300; sy = Math.random() * h; }
+    else if (side === 2) { sx = Math.random() * w; sy = -400 - Math.random() * 300; }
+    else { sx = Math.random() * w; sy = h + 400 + Math.random() * 300; }
 
     card.textContent = BLESSINGS[i % BLESSINGS.length];
+    var initRot = (Math.random()-0.5)*30;
     card.style.cssText = [
       'left:' + sx + 'px; top:' + sy + 'px;',
-      'transform: rotate(' + ((Math.random()-0.5)*30) + 'deg) scale(' + sizeFactor + ');',
+      'transform: translate(-50%, -50%) rotate(' + initRot + 'deg) scale(' + sizeFactor + ');',
       'z-index:' + Math.floor(Math.random() * 50) + ';',
       'opacity:0;',
       'font-size: clamp(9px, ' + (1.2 * sizeFactor) + 'vmin, 16px);',
@@ -611,11 +612,12 @@ function showCardStage() {
     card.dataset.ty = ty;
     card.dataset.rot = rot;
     card.dataset.idx = i;
+    card.dataset.sf = (0.7 + Math.random() * 0.6);
     cardStage.appendChild(card);
     cardElements.push(card);
   }
 
-  // Fly-in animation
+  // Fly-in animation (cards centered with translate(-50%, -50%))
   requestAnimationFrame(function() {
     requestAnimationFrame(function() {
       for (var i = 0; i < cardElements.length; i++) {
@@ -624,12 +626,13 @@ function showCardStage() {
           var tx = parseFloat(c.dataset.tx);
           var ty = parseFloat(c.dataset.ty);
           var rot = parseFloat(c.dataset.rot);
+          var sf = parseFloat(c.dataset.sf);
           var tDelay = (idx / cardElements.length) * 1800;
           c.style.transition = 'all ' + (1.2 + Math.random()*0.6) + 's cubic-bezier(0.34, 1.56, 0.64, 1)';
           c.style.transitionDelay = tDelay + 'ms';
           c.style.left = tx + 'px';
           c.style.top = ty + 'px';
-          c.style.transform = 'rotate(' + rot + 'deg) scale(' + (0.7 + Math.random()*0.6) + ')';
+          c.style.transform = 'translate(-50%, -50%) rotate(' + rot + 'deg) scale(' + sf + ')';
           c.style.opacity = '1';
           c.classList.add('show');
         })(i);
